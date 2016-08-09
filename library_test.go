@@ -165,6 +165,25 @@ func Test_Library_RemoveSong(t *testing.T) {
 	}
 }
 
+func Test_Library_Rescan(t *testing.T) {
+	library := newTempLibrary()
+	defer library.Close()
+
+	if err := CopyFile("fixtures/sample.mp3", filepath.Join(library.Config.BasePath, "sample.mp3"), 0755); err != nil {
+		t.Fatalf("Unexpected error: %s", err)
+	}
+
+	if err := library.Rescan(); err != nil {
+		t.Fatalf("Unexpected error: %s", err)
+	}
+
+	fingerprint := FingerprintFile("fixtures/sample.mp3")
+	song := library.getSongByFingerprint(fingerprint)
+	if song == nil {
+		t.Errorf("Expected to have song")
+	}
+}
+
 func Test_Library_getFilepathFromSong(t *testing.T) {
 	library := newTempLibrary()
 	defer library.Close()

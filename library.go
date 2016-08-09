@@ -150,6 +150,25 @@ func (l *Library) AddSongFromFile(filepath string) (*Song, error) {
 	return &song, l.db.Save(&song).Error
 }
 
+func (l *Library) Rescan() error {
+	return l.walk(func(path string, info os.FileInfo, err error) error {
+		if err == nil && !info.IsDir() {
+			if _, err = l.AddSongFromFile(path); err != nil {
+				// Ignore TagError errors and continue walking
+				if _, ok := err.(*TagError); ok {
+					err = nil
+				}
+			}
+		}
+
+		return err
+	})
+}
+
+func (l *Library) walk(visitor filepath.WalkFunc) error {
+	return filepath.Walk(l.Config.BasePath, visitor)
+}
+
 func (l *Library) getSongByFingerprint(fp string) *Song {
 	song := Song{Fingerprint: fp}
 	if err := l.db.Where(song).First(&song).Error; err != nil {
