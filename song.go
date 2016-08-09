@@ -39,7 +39,7 @@ func newSongFromFile(filepath string) (Song, error) {
 	s := Song{}
 	file, err := taglib.Read(filepath)
 	if err != nil {
-		return s, err
+		return s, newTagError(filepath, err)
 	}
 	defer file.Close()
 
@@ -67,7 +67,7 @@ func newSongFromFile(filepath string) (Song, error) {
 func syncSongToFile(s *Song) error {
 	file, err := taglib.Read(s.Filepath)
 	if err != nil {
-		return err
+		return newTagError(s.Filepath, err)
 	}
 	defer file.Close()
 
@@ -80,7 +80,7 @@ func syncSongToFile(s *Song) error {
 	file.SetGenre(s.Genre.Name)
 
 	if err := file.Save(); err != nil {
-		return nil
+		return newTagError(s.Filepath, err)
 	}
 
 	s.Fingerprint = FingerprintFile(s.Filepath)
